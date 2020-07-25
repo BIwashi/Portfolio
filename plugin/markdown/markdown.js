@@ -7,13 +7,59 @@
 	if (typeof define === 'function' && define.amd) {
 		root.marked = require( './marked' );
 		root.RevealMarkdown = factory( root.marked );
+		root.RevealMarkdown.initialize();
+
 	} else if( typeof exports === 'object' ) {
 		module.exports = factory( require( './marked' ) );
 	} else {
 		// Browser globals (root is window)
-		root.RevealMarkdown = factory( root.marked );
+        const renderer = new root.marked.Renderer();
+        
+        // p 要素のレンダラーを拡張 (通常のp要素は.から始める)
+        renderer.paragraph = function(text) {
+            const isParagraph = text.match(/^(\.\s*)/);
+            let out = text;
+            if (isParagraph) {
+                text = text.replace(isParagraph[1],'');
+                out = `<p>${text}</p>\n`;
+            }
+            return out;
+        }
+
+        // del 要素のレンダラーを拡張
+        renderer.del = function(text) {
+            let out = `<del>${text}</del>`;
+            const isDivStart = text.match(/^\s*{:(.*)}$/);
+            if (isDivStart) out = `<div class="${isDivStart[1]}">`;
+            if (text == 'x') out = `</div>`;
+            out = `${out}\n`;
+            return out;
+        }
+
+        // img 要素のレンダラーを拡張
+        renderer.image = function(href, title, text) {
+            if (this.options.baseUrl && !originIndependentUrl.test(href)) {
+                href = resolveUrl(this.options.baseUrl, href);
+            }
+            const size = text.match(/{(.+),(.+)}/);
+            if (size) {
+                text = text.replace(size[0], '');
+            }
+            var out = '<img src="' + href + '" alt="' + text + '"';
+            if (title) {
+                out += ` title="${title}"`;
+            }
+            if (size) {
+                out += ` style="width:${size[1]}; height:${size[2]}"`;
+            }
+            out += this.options.xhtml ? '/>' : '>';
+            return out;
+        };
+            
+		root.RevealMarkdown = factory( root.marked, renderer);
+		root.RevealMarkdown.initialize();
 	}
-}( this, function( marked ) {
+}( this, function( marked, renderer ) {
 
 	var DEFAULT_SLIDE_SEPARATOR = '^\r?\n---\r?\n$',
 		DEFAULT_NOTES_SEPARATOR = 'notes?:',
@@ -197,108 +243,81 @@
 	 */
 	function processSlides() {
 
-		return new Promise( function( resolve ) {
+		var sections = document.querySelectorAll( '[data-markdown]'),
+			section;
 
-			var externalPromises = [];
+		for( var i = 0, len = sections.length; i < len; i++ ) {
 
-			[].slice.call( document.querySelectorAll( '[data-markdown]') ).forEach( function( section, i ) {
+			section = sections[i];
 
-				if( section.getAttribute( 'data-markdown' ).length ) {
+			if( section.getAttribute( 'data-markdown' ).length ) {
 
-					externalPromises.push( loadExternalMarkdown( section ).then(
+				var xhr = new XMLHttpRequest(),
+					url = section.getAttribute( 'data-markdown' );
 
-						// Finished loading external file
-						function( xhr, url ) {
+				datacharset = section.getAttribute( 'data-charset' );
+
+				// see https://developer.mozilla.org/en-US/docs/Web/API/element.getAttribute#Notes
+				if( datacharset != null && datacharset != '' ) {
+					xhr.overrideMimeType( 'text/html; charset=' + datacharset );
+				}
+
+				xhr.onreadystatechange = function() {
+					if( xhr.readyState === 4 ) {
+						// file protocol yields status code 0 (useful for local debug, mobile applications etc.)
+						if ( ( xhr.status >= 200 && xhr.status < 300 ) || xhr.status === 0 ) {
+
 							section.outerHTML = slidify( xhr.responseText, {
 								separator: section.getAttribute( 'data-separator' ),
 								verticalSeparator: section.getAttribute( 'data-separator-vertical' ),
 								notesSeparator: section.getAttribute( 'data-separator-notes' ),
 								attributes: getForwardedAttributes( section )
 							});
-						},
 
-						// Failed to load markdown
-						function( xhr, url ) {
+						}
+						else {
+
 							section.outerHTML = '<section data-state="alert">' +
 								'ERROR: The attempt to fetch ' + url + ' failed with HTTP status ' + xhr.status + '.' +
 								'Check your browser\'s JavaScript console for more details.' +
 								'<p>Remember that you need to serve the presentation HTML from a HTTP server.</p>' +
 								'</section>';
+
 						}
-
-					) );
-
-				}
-				else if( section.getAttribute( 'data-separator' ) || section.getAttribute( 'data-separator-vertical' ) || section.getAttribute( 'data-separator-notes' ) ) {
-
-					section.outerHTML = slidify( getMarkdownFromSlide( section ), {
-						separator: section.getAttribute( 'data-separator' ),
-						verticalSeparator: section.getAttribute( 'data-separator-vertical' ),
-						notesSeparator: section.getAttribute( 'data-separator-notes' ),
-						attributes: getForwardedAttributes( section )
-					});
-
-				}
-				else {
-					section.innerHTML = createMarkdownSlide( getMarkdownFromSlide( section ) );
-				}
-
-			});
-
-			Promise.all( externalPromises ).then( resolve );
-
-		} );
-
-	}
-
-	function loadExternalMarkdown( section ) {
-
-		return new Promise( function( resolve, reject ) {
-
-			var xhr = new XMLHttpRequest(),
-				url = section.getAttribute( 'data-markdown' );
-
-			datacharset = section.getAttribute( 'data-charset' );
-
-			// see https://developer.mozilla.org/en-US/docs/Web/API/element.getAttribute#Notes
-			if( datacharset != null && datacharset != '' ) {
-				xhr.overrideMimeType( 'text/html; charset=' + datacharset );
-			}
-
-			xhr.onreadystatechange = function( section, xhr ) {
-				if( xhr.readyState === 4 ) {
-					// file protocol yields status code 0 (useful for local debug, mobile applications etc.)
-					if ( ( xhr.status >= 200 && xhr.status < 300 ) || xhr.status === 0 ) {
-
-						resolve( xhr, url );
-
 					}
-					else {
+				};
 
-						reject( xhr, url );
+				xhr.open( 'GET', url, false );
 
-					}
+				try {
+					xhr.send();
 				}
-			}.bind( this, section, xhr );
+				catch ( e ) {
+					alert( 'Failed to get the Markdown file ' + url + '. Make sure that the presentation and the file are served by a HTTP server and the file can be found there. ' + e );
+				}
 
-			xhr.open( 'GET', url, true );
-
-			try {
-				xhr.send();
 			}
-			catch ( e ) {
-				alert( 'Failed to get the Markdown file ' + url + '. Make sure that the presentation and the file are served by a HTTP server and the file can be found there. ' + e );
-				resolve( xhr, url );
-			}
+			else if( section.getAttribute( 'data-separator' ) || section.getAttribute( 'data-separator-vertical' ) || section.getAttribute( 'data-separator-notes' ) ) {
 
-		} );
+				section.outerHTML = slidify( getMarkdownFromSlide( section ), {
+					separator: section.getAttribute( 'data-separator' ),
+					verticalSeparator: section.getAttribute( 'data-separator-vertical' ),
+					notesSeparator: section.getAttribute( 'data-separator-notes' ),
+					attributes: getForwardedAttributes( section )
+				});
+
+			}
+			else {
+				section.innerHTML = createMarkdownSlide( getMarkdownFromSlide( section ) );
+			}
+		}
 
 	}
 
 	/**
 	 * Check if a node value has the attributes pattern.
 	 * If yes, extract it and add that value as one or several attributes
-	 * to the target element.
+	 * the the terget element.
 	 *
 	 * You need Cache Killer on Chrome to see the effect on any FOM transformation
 	 * directly on refresh (F5)
@@ -367,47 +386,47 @@
 	 */
 	function convertSlides() {
 
-		var sections = document.querySelectorAll( '[data-markdown]:not([data-markdown-parsed])');
+		var sections = document.querySelectorAll( '[data-markdown]');
 
-		[].slice.call( sections ).forEach( function( section ) {
+		for( var i = 0, len = sections.length; i < len; i++ ) {
 
-			section.setAttribute( 'data-markdown-parsed', true )
+			var section = sections[i];
 
-			var notes = section.querySelector( 'aside.notes' );
-			var markdown = getMarkdownFromSlide( section );
+			// Only parse the same slide once
+			if( !section.getAttribute( 'data-markdown-parsed' ) ) {
 
-			section.innerHTML = marked( markdown );
-			addAttributes( 	section, section, null, section.getAttribute( 'data-element-attributes' ) ||
-							section.parentNode.getAttribute( 'data-element-attributes' ) ||
-							DEFAULT_ELEMENT_ATTRIBUTES_SEPARATOR,
-							section.getAttribute( 'data-attributes' ) ||
-							section.parentNode.getAttribute( 'data-attributes' ) ||
-							DEFAULT_SLIDE_ATTRIBUTES_SEPARATOR);
+				section.setAttribute( 'data-markdown-parsed', true )
 
-			// If there were notes, we need to re-add them after
-			// having overwritten the section's HTML
-			if( notes ) {
-				section.appendChild( notes );
+				var notes = section.querySelector( 'aside.notes' );
+				var markdown = getMarkdownFromSlide( section );
+                
+                /* 絵文字を有効に */
+                markdown = markdown.replace(/:([A-Za-z].+?):/g, '<i class="em em-$1" style="font-size: 1em"></i>')
+
+				section.innerHTML = marked( markdown, {renderer: renderer} );
+				addAttributes( 	section, section, null, section.getAttribute( 'data-element-attributes' ) ||
+								section.parentNode.getAttribute( 'data-element-attributes' ) ||
+								DEFAULT_ELEMENT_ATTRIBUTES_SEPARATOR,
+								section.getAttribute( 'data-attributes' ) ||
+								section.parentNode.getAttribute( 'data-attributes' ) ||
+								DEFAULT_SLIDE_ATTRIBUTES_SEPARATOR);
+
+				// If there were notes, we need to re-add them after
+				// having overwritten the section's HTML
+				if( notes ) {
+					section.appendChild( notes );
+				}
+
 			}
 
-		} );
-
-		return Promise.resolve();
+		}
 
 	}
 
 	// API
-	var RevealMarkdown = {
+	return {
 
-		/**
-		 * Starts processing and converting Markdown within the
-		 * current reveal.js deck.
-		 *
-		 * @param {function} callback function to invoke once
-		 * we've finished loading and parsing Markdown
-		 */
-		init: function( callback ) {
-
+		initialize: function() {
 			if( typeof marked === 'undefined' ) {
 				throw 'The reveal.js Markdown plugin requires marked to be loaded';
 			}
@@ -420,27 +439,19 @@
 				});
 			}
 
-			// marked can be configured via reveal.js config options
 			var options = Reveal.getConfig().markdown;
-			if( options ) {
+
+			if ( options ) {
 				marked.setOptions( options );
 			}
 
-			return processSlides().then( convertSlides );
-
+			processSlides();
+			convertSlides();
 		},
 
 		// TODO: Do these belong in the API?
 		processSlides: processSlides,
 		convertSlides: convertSlides,
 		slidify: slidify
-
 	};
-
-	// Register our plugin so that reveal.js will call our
-	// plugin 'init' method as part of the initialization
-	Reveal.registerPlugin( 'markdown', RevealMarkdown );
-
-	return RevealMarkdown;
-
 }));
