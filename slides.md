@@ -1,4 +1,29 @@
+<section data-background-image="img/main.jpg" data-background-opacity = "0.2">
+
+
+
+<h1> Shota Iwami </h1>
+
+
+<h4> About </h4>
+My name is Shota Iwami.<br >
+I'm 22 years old and living in Yokohama.
+<br>
+<br>
+
+<h4> SNS </h4>
+
+<a href="https://twitter.com/B_Sardine">Twitter：@B_Sardine</a>
+<br >
+<a href="https://github.com/BIwashi">Github：BIwashi</a>
+
+
+
+</section>
+
+
 <section data-background-image="img/droneMaking.jpg" data-background-opacity = "0.2">
+
 
 
 <h2> Internship</h2>
@@ -13,44 +38,40 @@ I work at Space Entertainment Laboratory
 <br>We'are developing a new drone product <strong>“HHAMADORI”</strong>.
 </section>
 
-***
 
-### Shota Iwami
+<section data-background-image="img/d1.jpg" data-background-opacity = "0.2">
 
 
-#### About 
-My name is Shota Iwami.
-I'm 22 years old and living in Yokohama.
 
-#### SNS
-[Twitter](https://twitter.com/B_Sardine)
-[Github](https://github.com/BIwashi)
-
-<!-- <section data-background-image="img/main.jpg" data-background-opacity = "0.2">
-</section> -->
-
----
-
-## DRONE
-I love a drone and have my drone **"Mavic mini"**.
+<h2>DRONE</h2>
+I love a drone and have my drone <strong>"Mavic mini"</strong>.
 
 You can watch my photos by my drone in Mie.
+<br >
+<h3><br><a href="https://twitter.com/ynusb_main?lang=ja">TAP HERE!</a></h3>
 
 
-***
-
-## MUSIC
-
-
-
-
-<!-- <p class='fragment'>
-bar
-</p> -->
-
-<!-- <section data-background-image="http://example.com/image.png">
-  <h2>Image</h2>
 </section>
-<section data-background-image="http://example.com/image.png" data-background-size="100px" data-background-repeat="repeat">
-  <h2>This background image will be sized to 100px and repeated</h2>
-</section> -->
+
+
+<section data-background-image="img/YNUSB.JPG" data-background-opacity = "0.2">
+
+
+
+<h2>MUSIC</h2>
+I play the Saxophone.
+<br >
+ I'm a member of the 
+ <br><a href="https://twitter.com/ynusb_main?lang=ja">Yokohama National University Symphonic Band</a>.
+
+
+
+
+</section>
+
+
+
+
+
+
+
