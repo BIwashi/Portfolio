@@ -7,9 +7,33 @@
 }
 
 #rainbow {
-    -webkit-text-fill-color: transparent;
-    background-image: url("https://media.giphy.com/media/1Be59mSZAMAl0h0Y2v/giphy.gif");
+  -webkit-text-fill-color: transparent;
+  background-image: url("https://media.giphy.com/media/1Be59mSZAMAl0h0Y2v/giphy.gif");
+  background-size: cover;
+  -webkit-background-clip: text;
+  background-repeat: no-repeat;
+}
+
+#bg-video{
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: -100;
+    background: url('img/dmain.png') no-repeat;
     background-size: cover;
-    -webkit-background-clip: text;
-    background-repeat: no-repeat;
-  }
+   }
+   /* ----- 背景の上に表示させたいコンテンツ ----- */
+   .header-title{
+    position: relative; /*必ず必要*/
+    z-index: 2; /*必ず必要*/
+    display: flex;
+    width: 50%;
+    justify-content: center;
+    align-items: center;
+    text-align:center;
+    margin: auto;
+   }
