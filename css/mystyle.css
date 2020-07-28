@@ -1,7 +1,15 @@
 #mystyle {
   -webkit-text-fill-color: transparent;
-  background-image: url("https://img.gifmagazine.net/gifmagazine/images/4017095/original.mp4");
+  background-image: url("https://img.gifmagazine.net/gifmagazine/images/2770409/original.gif");
   background-size: cover;
   -webkit-background-clip: text;
   background-repeat: no-repeat;
 }
+
+#rainbow {
+    -webkit-text-fill-color: transparent;
+    background-image: url("https://media.giphy.com/media/1Be59mSZAMAl0h0Y2v/giphy.gif");
+    background-size: cover;
+    -webkit-background-clip: text;
+    background-repeat: no-repeat;
+  }
