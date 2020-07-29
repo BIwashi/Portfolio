@@ -3842,6 +3842,7 @@
 					backgroundVideo = slide.getAttribute( 'data-background-video' ),
 					backgroundVideoLoop = slide.hasAttribute( 'data-background-video-loop' ),
 					backgroundVideoMuted = slide.hasAttribute( 'data-background-video-muted' );
+					
 
 				// Images
 				if( backgroundImage ) {
