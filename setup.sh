@@ -33,7 +33,7 @@ cd ..
 sudo rm -rf MySlides.git  # バックアップいらないから削除
 
 
-git clone $newRepository  # 新しく作ったリポジトリにからclone
+git clone $newRepository  # 新しく作ったリポジトリからclone
 
 
 
