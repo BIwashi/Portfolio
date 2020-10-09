@@ -24,18 +24,13 @@ read newRepositoryName
 git clone --mirror https://github.com/BIwashi/MySlides.git  # --mirrorオプション付きで大本からclone
 cd MySlides.git
 
-
-
 git push --mirror $newRepository  # ここでnewリポジトリに移行
 
 cd ..
 
 sudo rm -rf MySlides.git  # バックアップいらないから削除
 
-
 git clone $newRepository  # 新しく作ったリポジトリからclone
-
-
 
 cd $newRepositoryName
 
